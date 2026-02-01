@@ -9,107 +9,128 @@
       flex: 1.2; background: rgba(255,255,255,0.05); border-radius: 15px;
       display: flex; align-items: center; justify-content: center; padding: 20px;
     }
-    label { font-size: 12px; color: #aaa; display: block; margin-bottom: 5px; }
-    input, select { width: 100%; padding: 8px; border-radius: 5px; border: 1px solid #333; background: #222; color: white; }
+    label { font-size: 11px; color: #888; text-transform: uppercase; }
+    input, select, textarea { width: 100%; padding: 8px; border-radius: 5px; border: 1px solid #333; background: #222; color: white; margin-bottom: 5px; }
     .btn-get-code { 
       background: #00d9ff; color: #000; border: none; padding: 12px; 
-      border-radius: 8px; font-weight: bold; cursor: pointer; margin-top: 15px;
+      border-radius: 8px; font-weight: bold; cursor: pointer; margin-top: 15px; width: 100%;
     }
-    /* Стили самого плеера в превью */
     #PLAYER_VIEW {
-      width: 320px; background: rgba(255, 255, 255, 0.1); backdrop-filter: blur(10px);
+      width: 280px; background: rgba(255, 255, 255, 0.1); backdrop-filter: blur(10px);
       border-radius: 20px; padding: 20px; text-align: center; border: 1px solid rgba(255,255,255,0.1);
     }
-    .album-art { width: 200px; height: 120px; background: #333; margin: 0 auto 15px; border-radius: 10px; object-fit: cover; }
-    .progress-bar { width: 100%; height: 4px; background: rgba(255,255,255,0.2); margin: 15px 0; border-radius: 2px; }
-    .progress-fill { height: 100%; width: 35%; border-radius: 2px; }
-    .controls-icons { display: flex; justify-content: center; gap: 20px; align-items: center; font-size: 20px; }
+    .album-art { width: 100%; height: 140px; background: #333; border-radius: 10px; object-fit: cover; }
   </style>
 
   <div id="PLAYER_EDITOR">
     <div class="controls">
-      <h3 style="margin:0; color:#00d9ff;">Audio Player Editor</h3>
-      <label>Язык интерфейса: 
-        <select id="p_lang"><option value="ru">Русский</option><option value="en">English</option></select>
-      </label>
-      <label>Цвет акцента: <input type="color" id="p_color" value="#00d9ff"></label>
-      <label>URL картинки: <input type="text" id="p_img" placeholder="https://..."></label>
-      <label>Плейлист (JSON или ссылки через запятую): 
-        <textarea id="p_list" style="width:100%; height:60px; background:#222; color:#fff; font-size:10px;">https://ryabchevskayav-pixel.github.io/audio/track1.mp3</textarea>
-      </label>
-      <button class="btn-get-code" onclick="copyPlayerCode()">ПОЛУЧИТЬ КОД ДЛЯ GENIALLY</button>
+      <h3 style="margin:0 0 10px 0; color:#00d9ff;">Fix Music Player</h3>
+      <label>Язык: <select id="p_lang"><option value="ru">Русский</option><option value="en">English</option></select></label>
+      <label>Цвет: <input type="color" id="p_color" value="#00d9ff"></label>
+      <label>Картинка (URL): <input type="text" id="p_img" value="https://images.unsplash.com/photo-1614613535308-eb5fbd3d2c17?w=400"></label>
+      <label>Ссылки на MP3 (каждая с новой строки):</label>
+      <textarea id="p_list" style="height:100px;">https://ryabchevskayav-pixel.github.io/audio/track1.mp3</textarea>
+      <button class="btn-get-code" onclick="copyPlayerCode()">СКОПИРОВАТЬ ИСПРАВЛЕННЫЙ КОД</button>
     </div>
 
     <div class="preview-area">
       <div id="PLAYER_VIEW">
-        <img id="prev_img" src="https://via.placeholder.com/200x120" class="album-art">
-        <div id="prev_title" style="font-weight: bold; font-size: 14px;">Song Title</div>
-        <div style="font-size: 11px; opacity: 0.6; margin-top: 5px;">Lorem ipsum dolor sit amet</div>
-        <div class="progress-bar"><div class="progress-fill" id="prev_bar" style="background: #00d9ff;"></div></div>
-        <div class="controls-icons">
-          <span>⏮</span> <span style="font-size: 30px;">⏸</span> <span>⏭</span>
-        </div>
+        <img id="prev_img" src="https://images.unsplash.com/photo-1614613535308-eb5fbd3d2c17?w=400" class="album-art">
+        <div style="font-weight:bold; margin-top:10px;">Preview</div>
+        <div style="width:100%; height:4px; background:#444; margin:15px 0;"><div id="prev_bar" style="width:40%; height:100%; background:#00d9ff;"></div></div>
+        <div style="font-size:24px;">⏮ ⏸ ⏭</div>
       </div>
     </div>
   </div>
 
   <script>
-    const inputs = ['p_lang', 'p_color', 'p_img', 'p_list'];
-    function updatePreview() {
-      const color = document.getElementById('p_color').value;
-      const img = document.getElementById('p_img').value || 'https://via.placeholder.com/200x120';
-      document.getElementById('prev_bar').style.background = color;
-      document.getElementById('prev_img').src = img;
-    }
-    inputs.forEach(id => document.getElementById(id).addEventListener('input', updatePreview));
-
     function copyPlayerCode() {
       const color = document.getElementById('p_color').value;
-      const img = document.getElementById('p_img').value || 'https://via.placeholder.com/200x120';
+      const img = document.getElementById('p_img').value;
       const lang = document.getElementById('p_lang').value;
-      const tracks = document.getElementById('p_list').value.split(',').map(s => s.trim());
+      
+      // Обработка ссылок: убираем пробелы и пустые строки
+      let tracks = document.getElementById('p_list').value.split('\n')
+        .map(s => s.trim())
+        .filter(s => s.length > 5)
+        .map(s => {
+           // Если это обычная ссылка GitHub, меняем её на RAW
+           if(s.includes('github.com') && !s.includes('raw.githubusercontent')) {
+             return s.replace('github.com', 'raw.githubusercontent.com').replace('/blob/', '/');
+           }
+           return s;
+        });
 
-      const finalCode = `<div id="GENIALLY_PLAYER" style="width:100%; display:flex; justify-content:center; background:transparent;">
+      if (tracks.length === 0) { alert('Добавьте хотя бы одну ссылку!'); return; }
+
+      const finalCode = `<div id="GENIALLY_PLAYER" style="display:flex; justify-content:center; background:transparent; font-family: sans-serif;">
   <style>
     .player-card {
-      width: 320px; background: rgba(20, 20, 20, 0.6); backdrop-filter: blur(15px);
-      border-radius: 25px; padding: 25px; color: white; font-family: sans-serif;
-      text-align: center; border: 1px solid rgba(255,255,255,0.1); box-shadow: 0 20px 40px rgba(0,0,0,0.4);
+      width: 300px; background: rgba(15, 15, 15, 0.7); backdrop-filter: blur(12px);
+      border-radius: 20px; padding: 20px; color: white; text-align: center;
+      border: 1px solid rgba(255,255,255,0.1); box-shadow: 0 15px 35px rgba(0,0,0,0.5);
     }
-    .art { width: 100%; height: 150px; border-radius: 15px; object-fit: cover; margin-bottom: 15px; }
-    .slider { width: 100%; accent-color: ${color}; cursor: pointer; }
-    .btns { display: flex; justify-content: space-around; align-items: center; margin-top: 15px; font-size: 24px; cursor: pointer; }
-    .playlist-btn { font-size: 12px; margin-top: 10px; opacity: 0.5; cursor: pointer; }
+    .art { width: 100%; height: 160px; border-radius: 12px; object-fit: cover; margin-bottom: 15px; }
+    .slider { width: 100%; accent-color: ${color}; margin: 15px 0; cursor: pointer; }
+    .controls { display: flex; justify-content: space-between; align-items: center; }
+    .play-btn { background: ${color}; color: black; width: 50px; height: 50px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 20px; cursor: pointer; }
+    .nav-btn { cursor: pointer; font-size: 20px; opacity: 0.8; }
+    .nav-btn:hover { opacity: 1; }
   </style>
+
   <div class="player-card">
     <img src="${img}" class="art">
-    <div id="t_name" style="font-weight:bold;">${lang === 'ru' ? 'Загрузка...' : 'Loading...'}</div>
-    <input type="range" class="slider" value="0" id="seek">
-    <div class="btns">
-      <span onclick="p.prev()">⏮</span>
-      <span id="p_play" onclick="p.toggle()" style="font-size:40px;">▶</span>
-      <span onclick="p.next()">⏭</span>
+    <div id="track_title" style="font-size: 14px; font-weight: bold; height: 20px; overflow: hidden;">Loading...</div>
+    <input type="range" id="seek" class="slider" value="0" step="0.1">
+    <div class="controls">
+      <span class="nav-btn" onclick="audioPlayer.prev()">⏮</span>
+      <div class="play-btn" id="play_status" onclick="audioPlayer.toggle()">▶</div>
+      <span class="nav-btn" onclick="audioPlayer.next()">⏭</span>
     </div>
-    <div class="playlist-btn" onclick="alert('${lang === 'ru' ? 'Плейлист: ' : 'Playlist: '}' + p.list.length + ' треков')">☰ Playlist</div>
+    <div id="error_log" style="font-size: 10px; color: #ff4444; margin-top: 10px;"></div>
   </div>
+
   <script>
-    var p = {
+    var audioPlayer = {
       list: ${JSON.stringify(tracks)},
       index: 0,
       audio: new Audio(),
-      toggle: function() {
-        if(this.audio.paused) { this.audio.play(); document.getElementById('p_play').innerText = '⏸'; }
-        else { this.audio.pause(); document.getElementById('p_play').innerText = '▶'; }
+      init: function() {
+        this.audio.crossOrigin = "anonymous";
+        this.load();
+        this.audio.ontimeupdate = () => {
+          if(!isNaN(this.audio.duration))
+            document.getElementById('seek').value = (this.audio.currentTime / this.audio.duration) * 100;
+        };
+        this.audio.onended = () => this.next();
+        this.audio.onerror = () => {
+           document.getElementById('error_log').innerText = "${lang === 'ru' ? 'Ошибка загрузки файла' : 'Audio load error'}";
+        };
+        document.getElementById('seek').oninput = (e) => {
+          this.audio.currentTime = (e.target.value / 100) * this.audio.duration;
+        };
       },
       load: function() {
+        document.getElementById('error_log').innerText = "";
         this.audio.src = this.list[this.index];
-        document.getElementById('t_name').innerText = this.list[this.index].split('/').pop();
+        const name = this.list[this.index].split('/').pop().replace('.mp3', '');
+        document.getElementById('track_title').innerText = decodeURI(name);
+      },
+      toggle: function() {
+        if(this.audio.paused) {
+          this.audio.play().catch(e => {
+            document.getElementById('error_log').innerText = "${lang === 'ru' ? 'Кликните еще раз для запуска' : 'Click again to play'}";
+          });
+          document.getElementById('play_status').innerText = '⏸';
+        } else {
+          this.audio.pause();
+          document.getElementById('play_status').innerText = '▶';
+        }
       },
       next: function() { this.index = (this.index + 1) % this.list.length; this.load(); this.audio.play(); },
       prev: function() { this.index = (this.index - 1 + this.list.length) % this.list.length; this.load(); this.audio.play(); }
     };
-    p.load();
-    p.audio.ontimeupdate = function() { document.getElementById('seek').value = (p.audio.currentTime / p.audio.duration) * 100 || 0; };
+    audioPlayer.init();
   <\/script>
 </div>`;
 
@@ -119,7 +140,7 @@
       el.select();
       document.execCommand('copy');
       document.body.removeChild(el);
-      alert('Код плеера скопирован!');
+      alert('Код скопирован! Теперь вставьте его в Genially.');
     }
   </script>
 </div>
